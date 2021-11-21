@@ -10,13 +10,26 @@ export class FontCanvas {
   x?: number[];
   y?: number[];
   w: {
+    writing_guide: {
+      writing_area_width: number;
+      writing_area_height: number;
+    };
     ink: Array<number[]>;
-  } = { ink: [] };
+    language: string;
+  } = {
+    writing_guide: {
+      writing_area_width: 0,
+      writing_area_height: 0,
+    },
+    ink: [],
+    language: "zh_TW",
+  };
   constructor(dom: HTMLCanvasElement | null) {
     this.setSize = dom?.querySelector(".setPenSize .penSize") || null;
     this.showSize = dom?.querySelector(".setPenSize .showSize") || null;
     this.dom = dom?.querySelector("canvas.writeFont") || null;
     this.ctx = this.dom?.getContext("2d");
+    // this.w.writing_guide
 
     if (this.dom) this.init();
   }
