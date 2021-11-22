@@ -34,23 +34,25 @@ export class Word {
   }
   /** 觸控按下事件 */
   touchstartEvent(event: TouchEvent) {
+    clearTimeout(this.timeout);
     event.preventDefault();
     let touch = event.targetTouches[0],
       offset = getOffset(this.canvas);
     let x = touch.pageX - offset.left,
       y = touch.pageY - offset.top;
-    if (this.ctx) {
+    if (this.ctx && this.drawIng) {
       this.ctx.beginPath();
       this.ctx.moveTo(x, y);
     }
   }
   /** 觸控移動事件 */
   touchmoveEvent(event: TouchEvent) {
+    clearTimeout(this.timeout);
     let touch = event.targetTouches[0],
       offset = getOffset(this.canvas);
     let x = touch.pageX - offset.left,
       y = touch.pageY - offset.top;
-    if (this.ctx) {
+    if (this.ctx && this.drawIng) {
       this.ctx.lineTo(x, y);
       this.ctx.stroke();
       this.ctx.beginPath();
