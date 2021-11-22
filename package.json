@@ -4,7 +4,7 @@
     "dev": "vite --mode development",
     "serve": "vite preview",
     "build:dev": "vite build --mode development",
-    "build:pro": "vite build --mode serve"
+    "build:pro": "vite build --mode production"
   },
   "dependencies": {
     "axios": "^0.23.0",

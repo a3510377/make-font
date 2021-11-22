@@ -16,7 +16,7 @@ const main = {
   },
 };
 export default defineConfig(({ command, mode }) => {
-  if (mode === "serve") {
+  if (mode === "production") {
     return {
       ...main,
       base: "/make-font/",
