@@ -1,10 +1,10 @@
 {
   "version": "0.0.0",
   "scripts": {
-    "dev": "cross-env vite --mode development",
+    "dev": "vite --mode development",
     "serve": "vite preview",
-    "build:dev": "cross-env vite build --mode development",
-    "build:pro": "cross-env vite build --mode production"
+    "build:dev": "vite build --mode development",
+    "build:pro": "vite build --mode serve"
   },
   "dependencies": {
     "axios": "^0.23.0",

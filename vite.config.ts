@@ -4,8 +4,7 @@ import vue from "@vitejs/plugin-vue";
 import path from "path";
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  base: process.env.NODE_ENV === "development" ? "/" : process.env.VITE_BASE,
+const main = {
   plugins: [vue(), WindiCSS()],
   resolve: {
     alias: [{ find: "@", replacement: path.resolve(__dirname, "./src") }],
@@ -15,4 +14,17 @@ export default defineConfig({
     open: true,
     cors: false,
   },
+};
+export default defineConfig(({ command, mode }) => {
+  if (mode === "serve") {
+    return {
+      ...main,
+      base: "/make-font/",
+    };
+  } else {
+    return {
+      ...main,
+      base: "/",
+    };
+  }
 });
