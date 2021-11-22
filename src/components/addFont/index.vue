@@ -13,6 +13,8 @@
       @mousemove="word?.mousemoveEvent"
       @mouseup="word?.stopWriteEvent"
       @mouseout="word?.stopWriteEvent"
+      @touchstart="word?.touchstartEvent"
+      @touchmove="word?.touchmoveEvent"
       @touchend="word?.stopWriteEvent"
     />
   </div>

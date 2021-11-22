@@ -3,6 +3,8 @@
         "mousedown",
         "mousemove",
         "mouseup",
-        "touchend"
+        "touchend",
+        "touchmove",
+        "touchstart"
     ]
 }
