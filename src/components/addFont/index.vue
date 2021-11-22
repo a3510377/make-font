@@ -1,45 +1,63 @@
 <template>
   <div class="wroteFontDiv flex flex-down flex-item-center">
     <div class="tools flex flex-item-center flex-center">
-      <div class="setPenSize flex">
-        <p class="showSize"></p>
-        <input type="range" class="penSize" min="2" max="30" value="3" />
-      </div>
-      <div class="configs" @mouseout="showConfigs = false">
-        <h1 @click="showConfigs = !showConfigs">設定</h1>
-        <div class="options" :class="{ showList: showConfigs }">
-          <div
-            v-for="config of configs"
-            :key="config"
-            :class="{ open: config.open }"
-            @click="config.open = !config.open"
-            v-text="(config.open ? '關閉' : '開啟') + config.info"
-          ></div>
-        </div>
-      </div>
+      <div class="configs"></div>
     </div>
-    <canvas class="writeFont" />
+    <canvas
+      ref="canvas"
+      class="writeFont"
+      :width="canvasSize"
+      :height="canvasSize"
+      :style="{ width: `${canvasSize}px`, height: `${canvasSize}px` }"
+      @mousedown="word?.mousedownEvent"
+      @mousemove="word?.mousemoveEvent"
+      @mouseup="word?.stopWriteEvent"
+      @mouseout="word?.stopWriteEvent"
+      @touchend="word?.stopWriteEvent"
+    />
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { FontCanvas } from "@/types/FontCanvas";
+import { Word } from "@/types/FontCanvas";
+
 export default defineComponent({
   name: "addFont",
   data() {
     return {
-      configs: [
-        {
-          open: true,
-          info: "",
-        },
-      ],
-      showConfigs: false,
+      configs: [{ open: true, info: "", value: null as any }],
+      penSize: 3,
+      canvasSize: Math.min(window.innerWidth * 0.9, 400),
+      canvas: null as HTMLCanvasElement | null,
+      ctx: null as CanvasRenderingContext2D | null,
+      word: null as Word | null,
     };
   },
+  methods: {
+    init() {
+      if (this.canvas) {
+        this.ctx = this.canvas.getContext("2d");
+        let ctx = this.ctx,
+          dpr = window.devicePixelRatio || 1,
+          rect = this.canvas.getBoundingClientRect();
+        this.word = new Word(this.canvas, this.penSize, ctx);
+        Object.assign(window, { Word: this.word });
+        if (ctx) {
+          /* HiDPI */
+          this.canvasSize = Math.min(rect.width * dpr, rect.height * dpr);
+          ctx.scale(dpr, dpr);
+          /* set 筆刷 */
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.strokeStyle = "black";
+        }
+      }
+    },
+  },
   mounted() {
-    new FontCanvas(document.querySelector(".wroteFontDiv"));
+    this.canvas = this.$refs.canvas as HTMLCanvasElement | null;
+    this.init();
   },
 });
 </script>
@@ -48,8 +66,6 @@ export default defineComponent({
 .wroteFontDiv {
   // max-width: 30em;
   canvas.writeFont {
-    width: 300px;
-    height: 300px;
     border: 2px solid black;
   }
   .tools {
