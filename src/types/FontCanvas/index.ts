@@ -15,14 +15,18 @@ const getOffset = (dom: Element | null) => {
 export class Word {
   private drawIng: boolean = false;
   private timeout: number = -1;
-  private x = [];
+  private x: number[] = [];
+  private y: number[] = [];
+  private ink: number[][][] = [];
   constructor(
     public canvas: HTMLCanvasElement,
     public penSize: number = 3,
     public canvasSize: number,
-    public ctx?: CanvasRenderingContext2D | null
+    public ctx?: CanvasRenderingContext2D | null,
+    public language: string = "zh_TW"
   ) {
     ctx ||= canvas.getContext("2d");
+    this.init();
   }
   /** 滑鼠按下事件 */
   mousedownEvent(event: MouseEvent) {
@@ -48,6 +52,7 @@ export class Word {
     if (this.ctx && this.drawIng) {
       this.ctx.beginPath();
       this.ctx.moveTo(x, y);
+      this.addXY(x, y);
     }
   }
   /** 觸控移動事件 */
@@ -62,14 +67,20 @@ export class Word {
       this.ctx.stroke();
       this.ctx.beginPath();
       this.ctx.moveTo(x, y);
+      this.addXY(x, y);
     }
   }
   /** 停止寫入 */
   stopWriteEvent() {
     clearTimeout(this.timeout);
+    if (this.drawIng) {
+      this.ink.push([this.x, this.y, []]);
+      this.x = this.y = [];
+    }
     this.drawIng = false;
     this.timeout = window.setTimeout(() => {
       this.clearCanvas();
+      this.finish();
     }, 2e3);
   }
   /** 清除畫布 */
@@ -81,8 +92,53 @@ export class Word {
       this.canvas?.height || 0
     );
   }
+  addXY(x: number, y: number) {
+    this.x.push(x);
+    this.y.push(y);
+  }
   /** 完成 */
-  finish() {}
+  finish() {
+    this.goGetFont();
+  }
+  /** setup */
+  init() {
+    this.clearCanvas();
+    this.x = this.y = [];
+  }
+  goGetFont() {
+    axios({
+      ...this.goGetFontData(),
+      method: "POST",
+    })
+      .then((res) => res.data)
+      .then((data: any) => {
+        this.x = this.y = [];
+        console.log(this.x);
+
+        console.log(data[1][0][1]);
+      });
+  }
+  goGetFontData() {
+    return {
+      url: "https://www.google.com.tw/inputtools/request?ime=handwriting&app=mobilesearch&cs=1&oe=UTF-8",
+      headers: {
+        "content-type": "application/json",
+      },
+      data: {
+        options: "enable_pre_space",
+        requests: [
+          {
+            writing_guide: {
+              writing_area_width: this.canvasSize,
+              writing_area_height: this.canvasSize,
+            },
+            ink: this.ink,
+            language: this.language,
+          },
+        ],
+      },
+    };
+  }
   /** 開始寫入 */
   private StartWrite(x: number, y: number) {
     clearTimeout(this.timeout);
@@ -92,6 +148,7 @@ export class Word {
       this.ctx.beginPath();
       this.ctx.moveTo(x, y);
     }
+    this.addXY(x, y);
   }
   /** 移動 */
   private MoveWrite(x: number, y: number) {
@@ -102,6 +159,7 @@ export class Word {
       this.ctx.stroke();
       this.ctx.beginPath();
       this.ctx.moveTo(x, y);
+      this.addXY(x, y);
     }
   }
 }

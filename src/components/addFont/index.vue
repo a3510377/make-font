@@ -44,7 +44,6 @@ export default defineComponent({
           dpr = window.devicePixelRatio || 1,
           rect = this.canvas.getBoundingClientRect();
         this.word = new Word(this.canvas, this.penSize, this.canvasSize, ctx);
-        this.word.clearCanvas();
         Object.assign(window, { Word: this.word });
         if (ctx) {
           /* HiDPI */
