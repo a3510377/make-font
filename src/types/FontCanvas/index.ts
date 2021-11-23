@@ -1,3 +1,5 @@
+import axios from "axios";
+
 const getOffset = (dom: Element | null) => {
   let rect = dom?.getBoundingClientRect(),
     win = dom?.ownerDocument?.defaultView || {
@@ -13,9 +15,11 @@ const getOffset = (dom: Element | null) => {
 export class Word {
   private drawIng: boolean = false;
   private timeout: number = -1;
+  private x = [];
   constructor(
     public canvas: HTMLCanvasElement,
     public penSize: number = 3,
+    public canvasSize: number,
     public ctx?: CanvasRenderingContext2D | null
   ) {
     ctx ||= canvas.getContext("2d");
@@ -36,6 +40,7 @@ export class Word {
   touchstartEvent(event: TouchEvent) {
     clearTimeout(this.timeout);
     event.preventDefault();
+    this.drawIng = true;
     let touch = event.targetTouches[0],
       offset = getOffset(this.canvas);
     let x = touch.pageX - offset.left,
@@ -61,6 +66,7 @@ export class Word {
   }
   /** 停止寫入 */
   stopWriteEvent() {
+    clearTimeout(this.timeout);
     this.drawIng = false;
     this.timeout = window.setTimeout(() => {
       this.clearCanvas();
@@ -75,6 +81,8 @@ export class Word {
       this.canvas?.height || 0
     );
   }
+  /** 完成 */
+  finish() {}
   /** 開始寫入 */
   private StartWrite(x: number, y: number) {
     clearTimeout(this.timeout);

@@ -43,7 +43,8 @@ export default defineComponent({
         let ctx = this.ctx,
           dpr = window.devicePixelRatio || 1,
           rect = this.canvas.getBoundingClientRect();
-        this.word = new Word(this.canvas, this.penSize, ctx);
+        this.word = new Word(this.canvas, this.penSize, this.canvasSize, ctx);
+        this.word.clearCanvas();
         Object.assign(window, { Word: this.word });
         if (ctx) {
           /* HiDPI */
@@ -60,6 +61,19 @@ export default defineComponent({
   mounted() {
     this.canvas = this.$refs.canvas as HTMLCanvasElement | null;
     this.init();
+  },
+  computed: {
+    lang: function () {
+      return localStorage.getItem("lang");
+    },
+  },
+  watch: {
+    canvasSize: function (e) {
+      if (this.word) this.word.canvasSize = this.canvasSize;
+    },
+    lang: function (e) {
+      console.log(e);
+    },
   },
 });
 </script>
