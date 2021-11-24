@@ -6,9 +6,9 @@
     <canvas
       ref="canvas"
       class="writeFont"
-      :width="canvasSize"
-      :height="canvasSize"
-      :style="{ width: `${canvasStyle}px`, height: `${canvasStyle}px` }"
+      width="400"
+      height="400"
+      style="border: 2px solid; cursor: crosshair"
       @mousedown="word?.mousedownEvent"
       @mousemove="word?.mousemoveEvent"
       @mouseup="word?.stopWriteEvent"
@@ -29,9 +29,8 @@ export default defineComponent({
   data() {
     return {
       configs: [{ open: true, info: "", value: null as any }],
-      penSize: 3,
-      ratio: 1,
-      canvasSize: Math.min(window.innerWidth * 0.9, 400),
+      penSize: 5,
+      ratio: window.devicePixelRatio || 1,
       canvasStyle: 400,
       canvas: null as HTMLCanvasElement | null,
       ctx: null as CanvasRenderingContext2D | null,
@@ -41,47 +40,24 @@ export default defineComponent({
   methods: {
     init() {
       if (this.canvas) {
-        this.ctx = this.canvas.getContext("2d");
-        let ctx = this.ctx,
-          dpr = window.devicePixelRatio || 1,
-          rect = this.canvas.getBoundingClientRect();
-        /* HiDPI */
-        // this.ratio = window.devicePixelRatio * this.canvasStyle;
-        console.log(this.ratio);
-
-        /*  */
-        this.word = new Word(this.canvas, this.penSize, this.canvasSize, ctx);
+        let ctx = (this.ctx = this.canvas.getContext("2d"));
+        this.word = new Word(this.canvas, this.penSize, this.canvasStyle, ctx);
         Object.assign(window, { Word: this.word });
         if (ctx) {
-          /* HiDPI */
-          this.canvasSize = Math.min(rect.width * dpr, rect.height * dpr);
-          ctx.scale(dpr, dpr);
-          // ctx.setTransform(this.ratio, 0, 0, this.ratio, 0, 0);
           /* set 筆刷 */
           ctx.lineCap = "round";
           ctx.lineJoin = "round";
           ctx.strokeStyle = "black";
         }
-      }
+      } else this.init();
     },
   },
   mounted() {
     this.canvas = this.$refs.canvas as HTMLCanvasElement | null;
+    Object.assign(window, { T_canvas: this.canvas });
     this.init();
   },
-  computed: {
-    lang: function () {
-      return localStorage.getItem("lang");
-    },
-  },
-  watch: {
-    canvasSize: function (e) {
-      if (this.word) this.word.canvasSize = this.canvasSize;
-    },
-    lang: function (e) {
-      console.log(e);
-    },
-  },
+  watch: {},
 });
 </script>
 
