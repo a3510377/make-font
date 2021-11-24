@@ -15,9 +15,7 @@ const getOffset = (dom: Element | null) => {
 export class Word {
   private drawIng: boolean = false;
   private timeout: number = -1;
-  private x: number[] = [];
-  private y: number[] = [];
-  private ink: number[][][] = [];
+  private WordInfo?: getWordInfo;
   constructor(
     public canvas: HTMLCanvasElement,
     public penSize: number = 3,
@@ -47,41 +45,28 @@ export class Word {
     this.drawIng = true;
     let touch = event.targetTouches[0],
       offset = getOffset(this.canvas);
-    let x = touch.pageX - offset.left,
-      y = touch.pageY - offset.top;
-    if (this.ctx && this.drawIng) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(x, y);
-      this.addXY(x, y);
-    }
+    this.StartWrite(touch.pageX - offset.left, touch.pageY - offset.top);
   }
   /** 觸控移動事件 */
   touchmoveEvent(event: TouchEvent) {
     clearTimeout(this.timeout);
     let touch = event.targetTouches[0],
       offset = getOffset(this.canvas);
-    let x = touch.pageX - offset.left,
-      y = touch.pageY - offset.top;
-    if (this.ctx && this.drawIng) {
-      this.ctx.lineTo(x, y);
-      this.ctx.stroke();
-      this.ctx.beginPath();
-      this.ctx.moveTo(x, y);
-      this.addXY(x, y);
-    }
+    this.MoveWrite(touch.pageX - offset.left, touch.pageY - offset.top);
   }
   /** 停止寫入 */
   stopWriteEvent() {
-    clearTimeout(this.timeout);
-    if (this.drawIng) {
-      this.ink.push([this.x, this.y, []]);
-      this.x = this.y = [];
-    }
-    this.drawIng = false;
+    if (this.drawIng) this.WordInfo?.splitStroke();
     this.timeout = window.setTimeout(() => {
       this.clearCanvas();
-      this.finish();
+      this.WordInfo?.fetch()
+        .then((res) => res.json())
+        .then((data: any) => {
+          this.WordInfo?.init();
+          console.log(data[1][0][1]);
+        });
     }, 2e3);
+    this.drawIng = false;
   }
   /** 清除畫布 */
   clearCanvas() {
@@ -92,63 +77,25 @@ export class Word {
       this.canvas?.height || 0
     );
   }
-  addXY(x: number, y: number) {
-    this.x.push(x);
-    this.y.push(y);
-  }
-  /** 完成 */
-  finish() {
-    this.goGetFont();
-  }
   /** setup */
   init() {
     this.clearCanvas();
-    this.x = this.y = [];
-  }
-  goGetFont() {
-    axios({
-      ...this.goGetFontData(),
-      method: "POST",
-    })
-      .then((res) => res.data)
-      .then((data: any) => {
-        this.x = this.y = [];
-        console.log(this.x);
-
-        console.log(data[1][0][1]);
-      });
-  }
-  goGetFontData() {
-    return {
-      url: "https://www.google.com.tw/inputtools/request?ime=handwriting&app=mobilesearch&cs=1&oe=UTF-8",
-      headers: {
-        "content-type": "application/json",
-      },
-      data: {
-        options: "enable_pre_space",
-        requests: [
-          {
-            writing_guide: {
-              writing_area_width: this.canvasSize,
-              writing_area_height: this.canvasSize,
-            },
-            ink: this.ink,
-            language: this.language,
-          },
-        ],
-      },
-    };
+    this.WordInfo = new getWordInfo(
+      this.canvasSize,
+      this.canvasSize,
+      this.language
+    );
   }
   /** 開始寫入 */
   private StartWrite(x: number, y: number) {
     clearTimeout(this.timeout);
-    this.drawIng = true;
-    if (this.ctx) {
+    if (!this.drawIng && this.ctx) {
       this.ctx.lineWidth = this.penSize;
       this.ctx.beginPath();
       this.ctx.moveTo(x, y);
+      this.drawIng = true;
+      this.WordInfo?.addXY(x, y);
     }
-    this.addXY(x, y);
   }
   /** 移動 */
   private MoveWrite(x: number, y: number) {
@@ -159,7 +106,55 @@ export class Word {
       this.ctx.stroke();
       this.ctx.beginPath();
       this.ctx.moveTo(x, y);
-      this.addXY(x, y);
+      this.WordInfo?.addXY(x, y);
     }
+  }
+}
+
+class getWordInfo {
+  protected x: number[] = [];
+  protected y: number[] = [];
+  protected ink: number[][][] = [];
+  constructor(
+    protected width: number,
+    protected height: number,
+    public language = "zh_TW"
+  ) {}
+  init() {
+    this.x = this.y = [];
+    this.ink = [];
+  }
+  addXY(x: number, y: number) {
+    this.x.push(x);
+    this.y.push(y);
+  }
+  splitStroke() {
+    this.ink.push([this.x, this.y, []]);
+    this.x = this.y = [];
+  }
+  fetch() {
+    return fetch(
+      "https://www.google.com.tw/inputtools/request?ime=handwriting&app=mobilesearch&cs=1&oe=UTF-8",
+      {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          options: "enable_pre_space",
+          requests: [
+            {
+              ink: this.ink,
+              language: this.language,
+              writing_guide: {
+                writing_area_width: this.width,
+                writing_area_height: this.height,
+              },
+            },
+          ],
+        }),
+      }
+    );
   }
 }

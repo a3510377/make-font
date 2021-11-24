@@ -8,7 +8,7 @@
       class="writeFont"
       :width="canvasSize"
       :height="canvasSize"
-      :style="{ width: `${canvasSize}px`, height: `${canvasSize}px` }"
+      :style="{ width: `${canvasStyle}px`, height: `${canvasStyle}px` }"
       @mousedown="word?.mousedownEvent"
       @mousemove="word?.mousemoveEvent"
       @mouseup="word?.stopWriteEvent"
@@ -30,7 +30,9 @@ export default defineComponent({
     return {
       configs: [{ open: true, info: "", value: null as any }],
       penSize: 3,
+      ratio: 1,
       canvasSize: Math.min(window.innerWidth * 0.9, 400),
+      canvasStyle: 400,
       canvas: null as HTMLCanvasElement | null,
       ctx: null as CanvasRenderingContext2D | null,
       word: null as Word | null,
@@ -43,12 +45,18 @@ export default defineComponent({
         let ctx = this.ctx,
           dpr = window.devicePixelRatio || 1,
           rect = this.canvas.getBoundingClientRect();
+        /* HiDPI */
+        // this.ratio = window.devicePixelRatio * this.canvasStyle;
+        console.log(this.ratio);
+
+        /*  */
         this.word = new Word(this.canvas, this.penSize, this.canvasSize, ctx);
         Object.assign(window, { Word: this.word });
         if (ctx) {
           /* HiDPI */
           this.canvasSize = Math.min(rect.width * dpr, rect.height * dpr);
           ctx.scale(dpr, dpr);
+          // ctx.setTransform(this.ratio, 0, 0, this.ratio, 0, 0);
           /* set 筆刷 */
           ctx.lineCap = "round";
           ctx.lineJoin = "round";
