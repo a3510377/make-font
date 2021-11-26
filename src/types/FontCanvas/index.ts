@@ -39,27 +39,33 @@ export class Word {
   touchstartEvent(event: TouchEvent) {
     clearTimeout(this.timeout);
     event.preventDefault();
-    let de = document.documentElement,
-      box = this.canvas.getBoundingClientRect(),
-      touch = event.changedTouches[0];
-    this.StartWrite(
-      touch.pageX - (box.left + window.pageXOffset - de.clientLeft),
-      touch.pageY - (box.top + window.pageYOffset - de.clientTop)
-    );
+    this.WordInfo?.initXY();
+    if (this.ctx) {
+      this.ctx.lineWidth = this.penSize;
+      let de = document.documentElement,
+        box = this.canvas.getBoundingClientRect(),
+        touch = event.changedTouches[0];
+      this.StartWrite(
+        touch.pageX - (box.left + window.pageXOffset - de.clientLeft),
+        touch.pageY - (box.top + window.pageYOffset - de.clientTop)
+      );
+    }
   }
   /** 觸控移動事件 */
   touchmoveEvent(event: TouchEvent) {
     clearTimeout(this.timeout);
-    let de = document.documentElement,
-      box = this.canvas.getBoundingClientRect(),
-      touch = event.changedTouches[0];
-    this.MoveWrite(
-      touch.pageX - (box.left + window.pageXOffset - de.clientLeft),
-      touch.pageY - (box.top + window.pageYOffset - de.clientTop)
-    );
+    if (this.drawIng) {
+      let de = document.documentElement,
+        box = this.canvas.getBoundingClientRect(),
+        touch = event.changedTouches[0];
+      this.MoveWrite(
+        touch.pageX - (box.left + window.pageXOffset - de.clientLeft),
+        touch.pageY - (box.top + window.pageYOffset - de.clientTop)
+      );
+    }
   }
   /** 停止寫入 */
-  stopWriteEvent() {
+  stopWriteEvent(event: Event, drawIng?: boolean) {
     this.WordInfo?.splitStroke();
     this.timeout = window.setTimeout(() => {
       this.clearCanvas();
@@ -70,7 +76,7 @@ export class Word {
           console.log(data[1][0][1]);
         });
     }, 2e3);
-    this.drawIng = false;
+    this.drawIng = void 0 === drawIng ? false : drawIng;
   }
   /** 清除畫布 */
   clearCanvas() {
@@ -97,7 +103,7 @@ export class Word {
   /** 開始寫入 */
   private StartWrite(x: number, y: number) {
     clearTimeout(this.timeout);
-    if (!this.drawIng && this.ctx) {
+    if (this.ctx) {
       this.ctx.lineWidth = this.penSize;
       this.drawIng = true;
       this.WordInfo?.initXY();
